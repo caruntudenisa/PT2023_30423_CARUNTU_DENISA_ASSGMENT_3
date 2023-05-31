@@ -26,7 +26,7 @@ import connection.ConnectionFactory;
  */
 public class AbstractDAO<T> {
     protected static final Logger LOGGER = Logger.getLogger(AbstractDAO.class.getName());
-
+    //afisat
     private final Class<T> type;
     /**
      * Constructs a new instance of the AbstractDAO class.
@@ -38,16 +38,18 @@ public class AbstractDAO<T> {
         this.type = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 
     }
+    //clasa poate fi de type client ord etc
 
     private String createSelectQuery(String field) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
         sb.append(" * ");
         sb.append(" FROM ");
-        sb.append(type.getSimpleName());
-        sb.append(" WHERE " + field + " =?");
+        sb.append(type.getSimpleName()); //numele clasei, numele tabelului in clasa de date
+        sb.append(" WHERE " + field + " =?"); //field=id si ? e placeholder inlocuit cu id ul pe care il dau eu
         return sb.toString();
     }
+    //intr-un stringbuilder fac query ul
 
     private String createFindAllQuery() {
         StringBuilder sb = new StringBuilder();
@@ -57,6 +59,7 @@ public class AbstractDAO<T> {
         sb.append(type.getSimpleName());
         return sb.toString();
     }
+    //nu dau id ca am nev de toate
     public List<T> findAll(){
         Connection connection = null;
         PreparedStatement statement = null;
@@ -65,8 +68,8 @@ public class AbstractDAO<T> {
         connection = ConnectionFactory.getConnection();
         try {
             statement = connection.prepareStatement(myQuery);
-            resultSet = statement.executeQuery();
-            return createObjects(resultSet);
+            resultSet = statement.executeQuery();//result set se salveaza toiate datele
+            return createObjects(resultSet);//create obj create obiecte, lista de obiecte
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -100,7 +103,7 @@ public class AbstractDAO<T> {
     }
 
     private List<T> createObjects(ResultSet resultSet) {
-        List<T> list = new ArrayList<T>();
+        List<T> list = new ArrayList<T>(); //din rand de tabele creaza un ob
         Constructor[] ctors = type.getDeclaredConstructors();
         Constructor ctor = null;
         for (int i = 0; i < ctors.length; i++) {
@@ -147,8 +150,8 @@ public class AbstractDAO<T> {
         int number = 0;
         for(Field field : type.getDeclaredFields())
         {
-            if(!field.getName().equals("id")){
-                if(number>0){
+            if(!field.getName().equals("id")){//nu adauga id pt ca se autogen
+                if(number>0){ //daca e 0 nu vreau sa pun virgula, number creste la fiecare field
                     sb.append(", ");
                 }
                 sb.append(field.getName());
@@ -156,7 +159,7 @@ public class AbstractDAO<T> {
             }
 
         }
-        sb.append(") VALUES (");
+        sb.append(") VALUES ("); //ce valori sunt in field uri
         number=0;
         for(Field field : type.getDeclaredFields())
         {
@@ -176,13 +179,13 @@ public class AbstractDAO<T> {
         String myQuery = sb.toString();
         System.out.println(myQuery);
         int index=1;
-        try {
+        try { //parcurg fiecare field in for si daca nu e id atunci setez in baza de date la acel index valoarea din obiect
             connection = ConnectionFactory.getConnection();
             statement = connection.prepareStatement(myQuery, Statement.RETURN_GENERATED_KEYS);
             for(Field field : type.getDeclaredFields()){
-                field.setAccessible(true);
+                field.setAccessible(true); //cls e private si incerc sa l accesez
                 if(!field.getName().equals("id")){
-                    statement.setObject(index,field.get(t));
+                    statement.setObject(index,field.get(t));//se pune in tabel valoarea din field de pe poz aia
                     index++;
                 }
             }
@@ -225,7 +228,7 @@ public class AbstractDAO<T> {
                     statement.setObject(index,field.get(t));
                     index++;
             }
-            Method idMethod = type.getMethod("getId");
+            Method idMethod = type.getMethod("getId");//apeleaza si returneaza id
             int id = (int) idMethod.invoke(t);
             statement.setInt(index,id);
             statement.executeUpdate();
